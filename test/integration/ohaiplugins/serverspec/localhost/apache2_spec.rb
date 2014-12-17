@@ -13,6 +13,7 @@ describe 'Apache2 Plugin' do
     apache_name = 'apache2'
     apache_user = 'www-data'
     apache_bin = '/usr/sbin/apache2'
+    apachectl_bin = '/usr/sbin/apache2ctl'
     apache_config_path = '/etc/apache2'
     apache_config_file = '/etc/apache2/apache2.conf'
     if platform == 'ubuntu' and platform_version >= 13.10
@@ -29,6 +30,7 @@ describe 'Apache2 Plugin' do
     apache_name = 'httpd'
     apache_user = 'apache'
     apache_bin = '/usr/sbin/httpd'
+    apachectl_bin = '/usr/sbin/apachectl'
     apache_config_path = '/etc/httpd'
     apache_config_file = '/etc/httpd/conf/httpd.conf'
     apache_mpm = 'prefork'
@@ -36,6 +38,10 @@ describe 'Apache2 Plugin' do
 
   it 'should have the binary in the right location' do
     expect(apache2['bin']).to eql(apache_bin)
+  end
+  
+  it 'should have the ctl binary in the right location' do
+    expect(apache2['ctlbin']).to eql(apachectl_bin)
   end
 
   it 'should have clients > 1' do

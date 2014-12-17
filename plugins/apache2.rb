@@ -19,7 +19,7 @@ Ohai.plugin(:Apache2) do
         response[:mpm] = $1.strip.downcase
       when /-D SERVER_CONFIG_FILE=["']?(.+?)["']?$/
         response[:config_file] = $1.strip
-    end
+      end
     end
 
     output[:stderr].lines do |line|
@@ -33,7 +33,7 @@ Ohai.plugin(:Apache2) do
         errors = $1.split(': ')
         errors[0] = 'Syntax error ' + errors[0]
         response[:syntax_errors] = errors
-    end
+      end
     end
 
     @parsed_apache = response
@@ -127,13 +127,8 @@ Ohai.plugin(:Apache2) do
     output = {}
     so = shell_out("#{apache_command} -V")
     output[:stdout] = so.stdout
-    if platform_family == 'debian'
-      so = shell_out("#{apache_command} -t")
-      output[:stderr] = so.stderr
-    elsif platform_family == 'rhel'
-      so = shell_out("#{apache_command} -S")
-      output[:stderr] = so.stderr
-    end
+    so = shell_out("#{apache_command} -t")
+    output[:stderr] = so.stderr
     output
   end
   # rubocop:enable Metrics/CyclomaticComplexity
@@ -153,6 +148,20 @@ Ohai.plugin(:Apache2) do
     command = "ps -u #{apache_user} -o cmd| grep -c  #{apache_command}"
     so = shell_out(command)
     so.stdout.to_i
+  end
+
+  def find_apachectl_executable(platform_family)
+    if platform_family == 'debian'
+      so = shell_out("/bin/bash -c 'command -v apache2ctl'")
+      apache2_bin = so.stdout.strip
+    elsif platform_family == 'rhel'
+      so = shell_out("/bin/bash -c 'command -v apachectl'")
+      apache2_bin = so.stdout.strip
+    else
+      fail("Apache test cannot run on os type #{platform_family}")
+    end
+
+    return apache2_bin unless apache2_bin.empty?
   end
 
   def find_apache_executable(platform_family)
@@ -183,11 +192,6 @@ Ohai.plugin(:Apache2) do
     return apache_user unless apache_user.empty?
   end
 
-  def find_apache2ctl
-    so = shell_out("/bin/bash -c 'command -v apache2ctl'")
-    so.stdout.strip
-  end
-
   def estimate_ram_per_prefork_child(platform_family, apache2_user)
     command = "ps -u #{apache2_user} -o pid= | xargs pmap -d | awk '/private/ \
                {c+=1; sum+=$4} END {printf \"%.2f\", sum/c/1024}'"
@@ -208,9 +212,11 @@ Ohai.plugin(:Apache2) do
 
   collect_data(:linux) do
     apache2_bin = find_apache_executable(platform_family)
+    apache2ctl_bin = find_apachectl_executable(platform_family)
     if apache2_bin
       apache2 Mash.new
       apache2[:bin] = apache2_bin
+      apache2[:ctlbin] = apache2ctl_bin
       apache2[:user] = find_apache_user(platform_family)
       apache2[:clients] = count_apache_clients(apache2_bin, apache2[:user])
 
@@ -219,6 +225,7 @@ Ohai.plugin(:Apache2) do
 
       apache2.merge!(parse_apache_output(apache2ctl_bin || apache2_bin))
       apache2.merge!(parse_vhosts(apache2ctl_bin || apache2_bin))
+
       if apache2[:config_path] == '"'
         apache2[:config_path] = File.dirname(apache2[:config_file])
       else
