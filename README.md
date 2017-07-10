@@ -4,8 +4,8 @@ This repo contains plugins for Opscode's [Ohai](https://github.com/opscode/ohai)
 
 ![](https://travis-ci.org/rackerlabs/ohai-plugins.svg?branch=master)
 
-##Writing Ohai Plugins
-####Using Vagrant
+## Writing Ohai Plugins
+### Using Vagrant
 Using [Vagrant](http://www.vagrantup.com/), you can easily create new/modify `Ohai` plugins in the `/plugins` directory and test them on an Ubuntu 12.04 system.
 
 
@@ -37,7 +37,7 @@ Packages are currently provided/tested for these distributions:
 * Debian 6
 * Debian 7
 
-###Installing Ohai-Solo:
+### Installing Ohai-Solo:
 
 ```
 curl -sSL http://ohai.rax.io/install.sh|bash
@@ -45,7 +45,7 @@ curl -sSL http://ohai.rax.io/install.sh|bash
 
 This will install `ohai-solo` to `/opt/ohai-solo`. Simply run `ohai-solo` to get all output.
 
-###Contributing:
+### Contributing:
 If you would like to contribute an Ohai plugin to this project, add the plugin
 to the `plugins` directory. Create a [serverspec](https://github.com/serverspec/serverspec)
 test in `test/integration/ohaiplugins/serverspec/localhost/` that tests your
